@@ -23,6 +23,7 @@ Board::Board() {
 			tmp.push_back(-1);
 		}
 		board.push_back(tmp);
+		mergetrack.push_back(tmp);
 	}
 	placeatrandcell();
 	placeatrandcell();
@@ -38,6 +39,11 @@ void Board::makemove(int direction) {
 		placeatrandcell();
 	if (isgameover())
 		alive = false;
+	for (int i = 0; i < mergetrack.size(); i++) {
+		for (int j = 0; j < mergetrack[0].size(); j++) {
+			mergetrack[i][j] = -1;
+		}
+	}
 }
 
 bool Board::isgameover() {
@@ -59,9 +65,10 @@ bool Board::hasmoves(int x, int y) {
 	return false;
 }
 
-void Board::makemove(pair<int, int> loc, pair<int, int> original) {
+void Board::move(pair<int, int> loc, pair<int, int> original) {
 	//merge tiles
-	if (board[loc.first][loc.second] == board[original.first][original.second]) {
+	if (mergetrack[loc.first][loc.second] == -1 && 
+			board[loc.first][loc.second] == board[original.first][original.second]) {
 		board[loc.first][loc.second] = board[original.first][original.second] * 2;
 		score += board[loc.first][loc.second];
 		if (!won && board[loc.first][loc.second] == 2048)
@@ -69,6 +76,7 @@ void Board::makemove(pair<int, int> loc, pair<int, int> original) {
 		if (digitsize < 2 && board[loc.first][loc.second] > 9) digitsize++;
 		if (digitsize < 3 && board[loc.first][loc.second] > 99) digitsize++;
 		if (digitsize < 4 && board[loc.first][loc.second] > 999) digitsize++;
+		mergetrack[loc.first][loc.second] = 1;
 	} else {
 		board[loc.first][loc.second] = board[original.first][original.second];
 	}
@@ -83,7 +91,7 @@ bool Board::moverightdown(int direction) {
 				pair<int, int> loc = movedirection(i, j, direction);
 				if (loc.first != i || loc.second != j) {
 					moved = true;
-					makemove(loc, pair<int, int>(i, j));
+					move(loc, pair<int, int>(i, j));
 				}
 			}
 		}
@@ -99,7 +107,7 @@ bool Board::moveleftup(int direction) {
 				pair<int, int> loc = movedirection(i, j, direction);
 				if (loc.first != i || loc.second != j) {
 					moved = true;
-					makemove(loc, pair<int, int>(i, j));
+					move(loc, pair<int, int>(i, j));
 				}
 			}
 		}

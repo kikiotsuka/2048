@@ -13,9 +13,10 @@ private:
 	bool alive;
 	bool won;
 	vector<vector<int> > board;
+	vector<vector<int> > mergetrack;
 
 	void placeatrandcell();
-	void makemove(pair<int, int> loc, pair<int, int> original);
+	void move(pair<int, int> loc, pair<int, int> original);
 	bool isgameover();
 	bool iscelloccupied(pair<int, int> loc);
 	void removecell(pair<int, int> loc);
