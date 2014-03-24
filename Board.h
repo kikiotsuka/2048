@@ -10,8 +10,9 @@ private:
 	int dimension;
 	int digitsize;
 	int score;
-	vector<vector<int> > board;
 	bool alive;
+	bool won;
+	vector<vector<int> > board;
 
 	void placeatrandcell();
 	void makemove(pair<int, int> loc, pair<int, int> original);

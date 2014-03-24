@@ -6,16 +6,17 @@
 #include <stdexcept>
 using namespace std;
 
-extern const int RIGHT; // 0
-extern const int DOWN; // 1
-extern const int LEFT; // 2
-extern const int UP; // 3
+extern const int RIGHT;
+extern const int DOWN;
+extern const int LEFT;
+extern const int UP;
 
 Board::Board() {
 	dimension = 4;
 	alive = true;
 	digitsize = 1;
 	score = 0;
+	won = false;
 	for (int i = 0; i < dimension; i++) {
 		vector<int> tmp;
 		for (int j = 0; j < dimension; j++) {
@@ -63,7 +64,8 @@ void Board::makemove(pair<int, int> loc, pair<int, int> original) {
 	if (board[loc.first][loc.second] == board[original.first][original.second]) {
 		board[loc.first][loc.second] = board[original.first][original.second] * 2;
 		score += board[loc.first][loc.second];
-		cout << digitsize << "\n";
+		if (!won && board[loc.first][loc.second] == 2048)
+			won = true;
 		if (digitsize < 2 && board[loc.first][loc.second] > 9) digitsize++;
 		if (digitsize < 3 && board[loc.first][loc.second] > 99) digitsize++;
 		if (digitsize < 4 && board[loc.first][loc.second] > 999) digitsize++;
@@ -152,6 +154,9 @@ bool Board::getisalive() {
 void Board::display() {
 	for (int i = 0; i < 5; i++) {
 		cout << "\n\n\n\n\n" << "\n";
+	}
+	if (won) {
+		cout << "2048 Reached! Keep going for an even better highscore" << "\n";
 	}
 	cout << "Score: " << score << "\n";
 	for (int i = 0; i < dimension * (digitsize + 1) + 1; i++) {
