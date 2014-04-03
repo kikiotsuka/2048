@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 #include <iostream>
-#include <stdexcept>
+#include <cmath>
 using namespace std;
 
 extern const int RIGHT;
@@ -13,10 +13,10 @@ extern const int UP;
 
 Board::Board() {
 	dimension = 4;
-	alive = true;
 	digitsize = 1;
 	score = 0;
 	won = false;
+
 	for (int i = 0; i < dimension; i++) {
 		vector<int> tmp;
 		for (int j = 0; j < dimension; j++) {
@@ -29,7 +29,34 @@ Board::Board() {
 	placeatrandcell();
 }
 
-void Board::makemove(int direction) {
+Board::Board(Board &copy) {
+	board = copy.getboard();
+	dimension = copy.getdimension();
+	digitsize = copy.getdigitsize();
+	score = copy.getscore();
+	won = copy.getwon();
+	for (int i = 0; i < dimension; i++) {
+		vector<int> tmp;
+		for (int j = 0; j < dimension; j++) {
+			tmp.push_back(-1);
+		}
+		mergetrack.push_back(tmp);
+	}
+}
+
+int Board::getdigitsize() {
+	return digitsize;
+}
+
+vector<vector<int> > Board::getboard() {
+	return board;
+}
+
+int Board::getscore() {
+	return score;
+}
+
+bool Board::makemove(int direction) {
 	bool moved = false;
 	if (direction == RIGHT || direction == DOWN)
 		moved = moverightdown(direction);
@@ -37,13 +64,13 @@ void Board::makemove(int direction) {
 		moved = moveleftup(direction);
 	if (moved)
 		placeatrandcell();
-	if (isgameover())
-		alive = false;
+	//reset mergetrack
 	for (int i = 0; i < mergetrack.size(); i++) {
 		for (int j = 0; j < mergetrack[0].size(); j++) {
 			mergetrack[i][j] = -1;
 		}
 	}
+	return moved;
 }
 
 bool Board::isgameover() {
@@ -58,17 +85,18 @@ bool Board::isgameover() {
 
 bool Board::hasmoves(int x, int y) {
 	int val = board[x][y];
-	if (x < dimension - 1 && (board[x + 1][y] == -1 || board[x + 1][y] == val))
+	if (val == -1)
 		return true;
-	if (y < dimension - 1 && (board[x][y + 1] == -1 || board[x][y + 1] == val))
+	if (x < dimension - 1 && (board[x + 1][y] == val && mergetrack[x + 1][y] == -1))
+		return true;
+	if (y < dimension - 1 && (board[x][y + 1] == val && mergetrack[x][y + 1] == -1))
 		return true;
 	return false;
 }
 
 void Board::move(pair<int, int> loc, pair<int, int> original) {
 	//merge tiles
-	if (mergetrack[loc.first][loc.second] == -1 && 
-			board[loc.first][loc.second] == board[original.first][original.second]) {
+	if (board[loc.first][loc.second] == board[original.first][original.second]) {
 		board[loc.first][loc.second] = board[original.first][original.second] * 2;
 		score += board[loc.first][loc.second];
 		if (!won && board[loc.first][loc.second] == 2048)
@@ -90,8 +118,8 @@ bool Board::moverightdown(int direction) {
 			if (board[i][j] != -1) {
 				pair<int, int> loc = movedirection(i, j, direction);
 				if (loc.first != i || loc.second != j) {
-					moved = true;
 					move(loc, pair<int, int>(i, j));
+					moved = true;
 				}
 			}
 		}
@@ -103,7 +131,7 @@ bool Board::moveleftup(int direction) {
 	bool moved = false;
 	for (int i = 0; i < dimension; i++) {
 		for (int j = 0; j < dimension; j++) {
-			if (board[i][j] != -1) {
+			if (board[i][j] != -1 && hasmoves(i, j)) {
 				pair<int, int> loc = movedirection(i, j, direction);
 				if (loc.first != i || loc.second != j) {
 					moved = true;
@@ -122,16 +150,20 @@ void Board::removecell(pair<int, int> location) {
 pair<int, int> Board::movedirection(int x, int y, int direction) {
 	int val = board[x][y];
 	if (direction == RIGHT) {
-		while (y < dimension - 1 && (board[x][y + 1] == -1 || board[x][y + 1] == val))
+		while (y < dimension - 1 && (board[x][y + 1] == -1 || 
+				(board[x][y + 1] == val && mergetrack[x][y + 1] == -1)))
 			y++;
 	} else if (direction == DOWN) {
-		while (x < dimension - 1 && (board[x + 1][y] == -1 || board[x + 1][y] == val))
+		while (x < dimension - 1 && (board[x + 1][y] == -1 || 
+				(board[x + 1][y] == val && mergetrack[x + 1][y] == -1)))
 			x++;
 	} else if (direction == LEFT) {
-		while (y > 0 && (board[x][y - 1] == -1 || board[x][y - 1] == val))
+		while (y > 0 && (board[x][y - 1] == -1 || 
+				(board[x][y - 1] == val && mergetrack[x][y - 1] == -1)))
 			y--;
 	} else if (direction == UP) {
-		while (x > 0 && (board[x - 1][y] == -1 || board[x - 1][y] == val))
+		while (x > 0 && (board[x - 1][y] == -1 || 
+				(board[x - 1][y] == val && mergetrack[x - 1][y] == -1)))
 			x--;
 	}
 	return pair<int, int>(x, y);
@@ -155,8 +187,16 @@ bool Board::iscelloccupied(pair<int, int> loc) {
 	return true;
 }
 
-bool Board::getisalive() {
-	return alive;
+bool Board::getwon() {
+	return won;
+}
+
+int Board::getdimension() {
+	return dimension;
+}
+
+int Board::getcellvalue(int x, int y) {
+	return board[x][y];
 }
 
 void Board::display() {

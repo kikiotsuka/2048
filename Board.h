@@ -7,18 +7,12 @@ using namespace std;
 
 class Board {
 private:
-	int dimension;
-	int digitsize;
-	int score;
-	bool alive;
+	int dimension, digitsize, score;
 	bool won;
-	vector<vector<int> > board;
-	vector<vector<int> > mergetrack;
+	vector<vector<int> > board, mergetrack;
 
 	void placeatrandcell();
 	void move(pair<int, int> loc, pair<int, int> original);
-	bool isgameover();
-	bool iscelloccupied(pair<int, int> loc);
 	void removecell(pair<int, int> loc);
 	pair<int, int> movedirection(int x, int y, int direction);
 	bool moverightdown(int direction);
@@ -26,8 +20,16 @@ private:
 	bool hasmoves(int x, int y);
 public:
 	Board();
-	void makemove(int direction);
-	bool getisalive();
+	Board(Board &copy);
+	bool makemove(int direction);
+	bool getwon();
+	int getdimension();
+	int getcellvalue(int x, int y);
+	int getdigitsize();
 	void display();
+	bool iscelloccupied(pair<int, int> loc);
+	bool isgameover();
+	vector<vector<int> > getboard();
+	int getscore();
 };
 #endif // Board_H
